@@ -39,6 +39,11 @@ router.post("/add-mentor",async(req,res)=>{
   try {
       const db = client.db("StudentMentor");
       const user = db.collection("mentor").insertOne(req.body);
+      if(req.body.mentorStudents){
+        req.body.mentorStudents.map(async(e)=>{
+          const stu = await db.collection("student").updateOne({"studentName":e},{$set:{"studentMentor":req.body.mentorName}});
+        })
+      }
       res.status(200).json({
         message:"Mentor Added Successfully!"
       })
@@ -53,6 +58,11 @@ router.post("/add-student",async(req,res)=>{
   try {
       const db = client.db("StudentMentor");
       const user = db.collection("student").insertOne(req.body);
+      if(req.body.studentMentor){
+        const men = await db.collection("mentor").findOne({"mentorName":req.body.studentMentor});
+        men.mentorStudents.push(req.body.studentName);
+        const update = await db.collection("mentor").updateOne({"mentorName":req.body.studentMentor},{$set:{"mentorStudents":men.mentorStudents}});
+      }
       res.status(200).json({
         message:"Student Added Successfully"
       })
